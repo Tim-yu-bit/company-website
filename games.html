@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>经典游戏 - 龙腾岁月</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .games-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 100px 20px 60px;
+            text-align: center;
+            margin-top: 60px;
+        }
+
+        .games-header h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .games-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .games-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .game-thumbnail {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+        }
+
+        .game-info {
+            padding: 1.5rem;
+        }
+
+        .game-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .game-info p {
+            color: #666;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .game-link {
+            display: inline-block;
+            padding: 10px 25px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .game-link:hover {
+            background: #2980b9;
+        }
+
+        .notice {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            color: #856404;
+        }
+
+        .notice h4 {
+            margin-bottom: 0.5rem;
+            font-size: 1.2rem;
+        }
+
+        .game-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 10000;
+            padding: 20px;
+        }
+
+        .game-modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .game-frame {
+            width: 90%;
+            max-width: 900px;
+            height: 80vh;
+            background: white;
+            border-radius: 10px;
+            position: relative;
+        }
+
+        .game-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 10px;
+        }
+
+        .close-game {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: white;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        .close-game:hover {
+            background: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <h1>龙腾岁月</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="index.html#about">关于我们</a></li>
+                <li><a href="index.html#services">服务项目</a></li>
+                <li><a href="games.html" class="active">休闲娱乐</a></li>
+                <li><a href="index.html#contact">联系我们</a></li>
+            </ul>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 页面标题 -->
+    <section class="games-header">
+        <h2>🎮 经典游戏中心</h2>
+        <p>工作之余，放松一下，回味经典</p>
+    </section>
+
+    <!-- 游戏列表 -->
+    <div class="games-container">
+        <div class="notice">
+            <h4>⚠️ 温馨提示</h4>
+            <p>以下游戏仅供休闲娱乐，请合理安排游戏时间。游戏来源于互联网开源项目，如有侵权请联系删除。</p>
+        </div>
+
+        <div class="games-grid">
+            <!-- 魂斗罗 -->
+            <div class="game-card">
+                <div class="game-thumbnail">🎯</div>
+                <div class="game-info">
+                    <h3>魂斗罗</h3>
+                    <p>经典的横版射击游戏，双人合作闯关，30条命通关的传说你还记得吗？</p>
+                    <a href="https://www.yikm.net/nes/1.html" target="_blank" class="game-link">开始游戏</a>
+                </div>
+            </div>
+
+            <!-- 超级马里奥 -->
+            <div class="game-card">
+                <div class="game-thumbnail">🍄</div>
+                <div class="game-info">
+                    <h3>超级马里奥</h3>
+                    <p>最经典的横版过关游戏，吃蘑菇长大，踩乌龟，救公主的冒险之旅。</p>
+                    <a href="https://www.yikm.net/nes/3.html" target="_blank" class="game-link">开始游戏</a>
+                </div>
+            </div>
+
+            <!-- 坦克大战 -->
+            <div class="game-card">
+                <div class="game-thumbnail">🎖️</div>
+                <div class="game-info">
+                    <h3>坦克大战</h3>
+                    <p>保卫基地的经典战争游戏，和小伙伴一起守护老鹰的记忆。</p>
+                    <a href="https://www.yikm.net/nes/11.html" target="_blank" class="game-link">开始游戏</a>
+                </div>
+            </div>
+
+            <!-- 冒险岛 -->
+            <div class="game-card">
+                <div class="game-thumbnail">🏝️</div>
+                <div class="game-info">
+                    <h3>冒险岛</h3>
+                    <p>可爱的横版冒险游戏，骑着恐龙收集水果，经典的童年回忆。</p>
+                    <a href="https://www.yikm.net/nes/23.html" target="_blank" class="game-link">开始游戏</a>
+                </div>
+            </div>
+
+            <!-- 赤色要塞 -->
+            <div class="game-card">
+                <div class="game-thumbnail">🚁</div>
+                <div class="game-info">
+                    <h3>赤色要塞</h3>
+                    <p>经典的飞机射击游戏，躲避子弹，消灭敌人，挑战你的反应速度。</p>
+                    <a href="https://www.yikm.net/nes/15.html" target="_blank" class="game-link">开始游戏</a>
+                </div>
+            </div>
+
+            <!-- 俄罗斯方块 -->
+            <div class="game-card">
+                <div class="game-thumbnail">🧱</div>
+                <div class="game-info">
+                    <h3>俄罗斯方块</h3>
+                    <p>永恒的经典益智游戏，旋转方块，消除行列，简单而令人上瘾。</p>
+                    <a href="https://www.yikm.net/nes/5.html" target="_blank" class="game-link">开始游戏</a>
+                </div>
+            </div>
+
+            <!-- 忍者龙剑传 -->
+            <div class="game-card">
+                <div class="game-thumbnail">⚔️</div>
+                <div class="game-info">
+                    <h3>忍者龙剑传</h3>
+                    <p>高难度的动作游戏，操控忍者使用各种技能，挑战极限难度。</p>
+                    <a href="https://www.yikm.net/nes/43.html" target="_blank" class="game-link">开始游戏</a>
+                </div>
+            </div>
+
+            <!-- 双截龙 -->
+            <div class="game-card">
+                <div class="game-thumbnail">🥋</div>
+                <div class="game-info">
+                    <h3>双截龙</h3>
+                    <p>经典的格斗过关游戏，兄弟联手打击犯罪团伙，拯救女友。</p>
+                    <a href="https://www.yikm.net/nes/53.html" target="_blank" class="game-link">开始游戏</a>
+                </div>
+            </div>
+
+            <!-- 松鼠大作战 -->
+            <div class="game-card">
+                <div class="game-thumbnail">🐿️</div>
+                <div class="game-info">
+                    <h3>松鼠大作战</h3>
+                    <p>可爱的双人合作游戏，操控小松鼠使用各种武器冒险。</p>
+                    <a href="https://www.yikm.net/nes/91.html" target="_blank" class="game-link">开始游戏</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 龙腾岁月. 保留所有权利.</p>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
