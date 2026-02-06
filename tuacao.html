@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>疯狂吐槽 - 牛马之家</title>
     <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
     <style>
         .tuacao-header {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
@@ -113,34 +112,137 @@
             line-height: 1.8;
         }
 
-        #gitalk-container {
+        /* 评论表单 */
+        .comment-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #f5576c;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .submit-btn {
+            background: #f5576c;
+            color: white;
+            padding: 12px 40px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .submit-btn:hover {
+            background: #e04560;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.3);
+        }
+
+        /* 评论列表 */
+        .comments-list {
             margin-top: 30px;
         }
 
-        .setup-instructions {
+        .comment-item {
+            background: #fff;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+
+        .comment-item:hover {
+            border-color: #f5576c;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .comment-author {
+            font-weight: bold;
+            color: #f5576c;
+            font-size: 1.1rem;
+        }
+
+        .comment-time {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .comment-content {
+            color: #333;
+            line-height: 1.8;
+            font-size: 1rem;
+        }
+
+        .no-comments {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-size: 1.1rem;
+        }
+
+        .local-notice {
             background: #fff3cd;
             border: 2px solid #ffc107;
             border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
+            padding: 15px;
+            margin-bottom: 20px;
             color: #856404;
+            font-size: 0.9rem;
         }
 
-        .setup-instructions h4 {
-            margin-bottom: 10px;
-            font-size: 1.2rem;
-        }
-
-        .setup-instructions ol {
-            margin-left: 20px;
-            line-height: 1.8;
-        }
-
-        .setup-instructions code {
-            background: #fff;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-family: monospace;
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -179,10 +281,10 @@
         <div class="notice-box">
             <h4>📢 使用说明</h4>
             <ul>
-                <li>点击下方任意话题卡片，进入对应的讨论区</li>
-                <li>需要登录GitHub账号才能发表评论</li>
-                <li>请遵守社区规范，文明发言</li>
-                <li>支持Markdown格式，让你的吐槽更生动</li>
+                <li>无需注册登录，匿名即可发表吐槽</li>
+                <li>点击下方任意话题卡片，切换讨论主题</li>
+                <li>请遵守社区规范，文明发言，理性讨论</li>
+                <li>评论保存在本地浏览器，换设备后不可见</li>
             </ul>
         </div>
 
@@ -229,7 +331,33 @@
         <div class="comment-section">
             <h3 id="topic-title">💬 自由讨论区</h3>
 
-            <div id="gitalk-container"></div>
+            <div class="local-notice">
+                💡 提示：评论数据保存在您的浏览器本地，清除浏览器缓存会丢失评论记录。
+            </div>
+
+            <!-- 评论表单 -->
+            <div class="comment-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nickname">昵称（选填）</label>
+                        <input type="text" id="nickname" placeholder="留空则显示为 匿名用户">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">邮箱（选填，不公开）</label>
+                        <input type="email" id="email" placeholder="选填，仅用于显示头像">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="content">吐槽内容 *</label>
+                    <textarea id="content" placeholder="说出你的想法..." required></textarea>
+                </div>
+                <button class="submit-btn" onclick="submitComment()">💬 发表吐槽</button>
+            </div>
+
+            <!-- 评论列表 -->
+            <div class="comments-list" id="commentsList">
+                <div class="no-comments">暂无评论，来发表第一条吧！</div>
+            </div>
         </div>
     </div>
 
@@ -241,32 +369,19 @@
     </footer>
 
     <script src="js/script.js"></script>
-    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
     <script>
         let currentTopic = 'free';
 
-        // Gitalk配置
-        const gitalkConfig = {
-            clientID: 'Ov23liFvAWZyEWMFK1N0',
-            clientSecret: 'e75ec49f376ab27c58b6acc97d03fa45c18c8d79',
-            repo: 'company-website',
-            owner: 'Tim-yu-bit',
-            admin: ['Tim-yu-bit'],
-            id: 'free-discussion',
-            distractionFreeMode: false,
-            labels: ['Gitalk', '自由讨论'],
-            title: '自由讨论区',
-            body: '欢迎在这里畅所欲言，分享你的想法和观点！',
-            language: 'zh-CN'
+        const topicNames = {
+            'work': '职场那些事',
+            'life': '生活吐槽',
+            'tech': '科技数码',
+            'car': '汽车话题',
+            'finance': '投资理财',
+            'free': '自由讨论'
         };
 
-        let gitalk = null;
-
-        function initGitalk(config) {
-            gitalk = new Gitalk(config);
-            gitalk.render('gitalk-container');
-        }
-
+        // 加载话题
         function loadTopic(topicId, topicName, element) {
             // 移除所有active类
             document.querySelectorAll('.topic-card').forEach(card => {
@@ -279,29 +394,98 @@
             // 更新标题
             document.getElementById('topic-title').innerHTML = `💬 ${topicName}`;
 
-            // 更新Gitalk配置
+            // 切换话题
             currentTopic = topicId;
-            const topicLabels = {
-                'work': '职场那些事',
-                'life': '生活吐槽',
-                'tech': '科技数码',
-                'car': '汽车话题',
-                'finance': '投资理财',
-                'free': '自由讨论'
-            };
 
-            gitalkConfig.id = topicId + '-discussion';
-            gitalkConfig.labels = ['Gitalk', topicLabels[topicId]];
-            gitalkConfig.title = topicLabels[topicId];
-
-            // 重新初始化Gitalk
-            document.getElementById('gitalk-container').innerHTML = '';
-            initGitalk(gitalkConfig);
+            // 加载该话题的评论
+            loadComments();
         }
 
-        // 页面加载时初始化默认话题
+        // 提交评论
+        function submitComment() {
+            const nickname = document.getElementById('nickname').value.trim() || '匿名用户';
+            const content = document.getElementById('content').value.trim();
+
+            if (!content) {
+                alert('请输入吐槽内容！');
+                return;
+            }
+
+            // 创建评论对象
+            const comment = {
+                id: Date.now(),
+                nickname: nickname,
+                content: content,
+                timestamp: new Date().toLocaleString('zh-CN'),
+                topic: currentTopic
+            };
+
+            // 获取现有评论
+            let comments = JSON.parse(localStorage.getItem('tuacao_comments') || '[]');
+
+            // 添加新评论到开头
+            comments.unshift(comment);
+
+            // 保存到localStorage
+            localStorage.setItem('tuacao_comments', JSON.stringify(comments));
+
+            // 清空表单
+            document.getElementById('content').value = '';
+
+            // 重新加载评论
+            loadComments();
+
+            // 提示
+            alert('✅ 发表成功！');
+        }
+
+        // 加载评论
+        function loadComments() {
+            const commentsList = document.getElementById('commentsList');
+            const allComments = JSON.parse(localStorage.getItem('tuacao_comments') || '[]');
+
+            // 筛选当前话题的评论
+            const topicComments = allComments.filter(c => c.topic === currentTopic);
+
+            if (topicComments.length === 0) {
+                commentsList.innerHTML = '<div class="no-comments">暂无评论，来发表第一条吧！</div>';
+                return;
+            }
+
+            // 渲染评论
+            let html = '';
+            topicComments.forEach(comment => {
+                html += `
+                    <div class="comment-item">
+                        <div class="comment-header">
+                            <span class="comment-author">${escapeHtml(comment.nickname)}</span>
+                            <span class="comment-time">${comment.timestamp}</span>
+                        </div>
+                        <div class="comment-content">${escapeHtml(comment.content)}</div>
+                    </div>
+                `;
+            });
+
+            commentsList.innerHTML = html;
+        }
+
+        // 转义HTML防止XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 页面加载时加载评论
         window.addEventListener('DOMContentLoaded', function() {
-            initGitalk(gitalkConfig);
+            loadComments();
+
+            // 回车发送（Ctrl+Enter）
+            document.getElementById('content').addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    submitComment();
+                }
+            });
         });
     </script>
 </body>
