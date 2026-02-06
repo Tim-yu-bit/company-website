@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>疯狂吐槽 - 牛马之家</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/gitalk/dist/gitalk.css">
+    <style>
+        .tuacao-header {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 100px 20px 60px;
+            text-align: center;
+            margin-top: 60px;
+        }
+
+        .tuacao-header h2 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .tuacao-header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .tuacao-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .topic-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .topic-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+        }
+
+        .topic-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-color: #f5576c;
+        }
+
+        .topic-card.active {
+            border-color: #f5576c;
+            background: linear-gradient(135deg, #fff5f7 0%, #fff 100%);
+        }
+
+        .topic-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .topic-card h3 {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .topic-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .comment-section {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-top: 40px;
+        }
+
+        .comment-section h3 {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #f5576c;
+        }
+
+        .notice-box {
+            background: #e3f2fd;
+            border-left: 5px solid #2196F3;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 40px;
+            color: #1565C0;
+        }
+
+        .notice-box h4 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notice-box ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        #gitalk-container {
+            margin-top: 30px;
+        }
+
+        .setup-instructions {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            color: #856404;
+        }
+
+        .setup-instructions h4 {
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+
+        .setup-instructions ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .setup-instructions code {
+            background: #fff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="logo">
+                <h1>牛马之家</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="index.html#about">关于我们</a></li>
+                <li><a href="index.html#services">服务项目</a></li>
+                <li><a href="games.html">休闲娱乐</a></li>
+                <li><a href="tuacao.html" class="active">疯狂吐槽</a></li>
+                <li><a href="index.html#contact">联系我们</a></li>
+            </ul>
+            <div class="menu-toggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 页面标题 -->
+    <section class="tuacao-header">
+        <h2>💬 疯狂吐槽</h2>
+        <p>畅所欲言的自由空间，分享你的想法和观点</p>
+    </section>
+
+    <!-- 吐槽内容 -->
+    <div class="tuacao-container">
+        <!-- 使用提示 -->
+        <div class="notice-box">
+            <h4>📢 使用说明</h4>
+            <ul>
+                <li>点击下方任意话题卡片，进入对应的讨论区</li>
+                <li>需要登录GitHub账号才能发表评论</li>
+                <li>请遵守社区规范，文明发言</li>
+                <li>支持Markdown格式，让你的吐槽更生动</li>
+            </ul>
+        </div>
+
+        <!-- 话题分类 -->
+        <div class="topic-grid">
+            <div class="topic-card" onclick="loadTopic('work', '职场那些事', this)">
+                <div class="topic-icon">💼</div>
+                <h3>职场那些事</h3>
+                <p>工作中的酸甜苦辣，职场心得分享，吐槽老板同事，交流职业发展</p>
+            </div>
+
+            <div class="topic-card" onclick="loadTopic('life', '生活吐槽', this)">
+                <div class="topic-icon">🏠</div>
+                <h3>生活吐槽</h3>
+                <p>日常生活趣事，衣食住行见闻，社会现象观察，生活小确幸分享</p>
+            </div>
+
+            <div class="topic-card" onclick="loadTopic('tech', '科技数码', this)">
+                <div class="topic-icon">💻</div>
+                <h3>科技数码</h3>
+                <p>最新科技产品评测，数码设备使用心得，软件工具推荐，技术探讨</p>
+            </div>
+
+            <div class="topic-card" onclick="loadTopic('car', '汽车话题', this)">
+                <div class="topic-icon">🚗</div>
+                <h3>汽车话题</h3>
+                <p>新能源汽车讨论，购车用车经验，汽车行业动态，理想汽车专题</p>
+            </div>
+
+            <div class="topic-card" onclick="loadTopic('finance', '投资理财', this)">
+                <div class="topic-icon">💰</div>
+                <h3>投资理财</h3>
+                <p>股市行情分析，投资经验交流，理财心得分享，风险提示讨论</p>
+            </div>
+
+            <div class="topic-card active" onclick="loadTopic('free', '自由讨论', this)">
+                <div class="topic-icon">🎯</div>
+                <h3>自由讨论</h3>
+                <p>任何想说的话题，开放的讨论空间，不设限制的思想碰撞</p>
+            </div>
+        </div>
+
+        <!-- 评论区 -->
+        <div class="comment-section">
+            <h3 id="topic-title">💬 自由讨论区</h3>
+
+            <!-- Gitalk配置说明 -->
+            <div class="setup-instructions">
+                <h4>⚙️ 评论系统配置说明</h4>
+                <p>要启用评论功能，需要完成以下配置步骤：</p>
+                <ol>
+                    <li>访问 <a href="https://github.com/settings/applications/new" target="_blank">GitHub OAuth Apps</a> 创建应用</li>
+                    <li>Application name: 填写 <code>牛马之家评论系统</code></li>
+                    <li>Homepage URL: 填写 <code>https://tim-yu-bit.github.io/company-website/</code></li>
+                    <li>Authorization callback URL: 填写 <code>https://tim-yu-bit.github.io/company-website/</code></li>
+                    <li>创建后获得 <code>Client ID</code> 和 <code>Client Secret</code></li>
+                    <li>编辑此页面，在下方JavaScript代码中填入您的配置信息</li>
+                </ol>
+                <p style="margin-top: 10px;"><strong>提示：</strong>配置完成后，用户可以使用GitHub账号登录发表评论。</p>
+            </div>
+
+            <div id="gitalk-container"></div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 牛马之家. 保留所有权利.</p>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="https://unpkg.com/gitalk/dist/gitalk.min.js"></script>
+    <script>
+        let currentTopic = 'free';
+
+        // Gitalk配置 - 需要替换为您自己的配置
+        const gitalkConfig = {
+            clientID: 'YOUR_CLIENT_ID', // 替换为您的GitHub OAuth App Client ID
+            clientSecret: 'YOUR_CLIENT_SECRET', // 替换为您的Client Secret
+            repo: 'company-website', // 您的仓库名
+            owner: 'Tim-yu-bit', // 您的GitHub用户名
+            admin: ['Tim-yu-bit'], // 管理员用户名
+            id: 'free-discussion', // 页面唯一标识
+            distractionFreeMode: false,
+            labels: ['Gitalk', '自由讨论'],
+            title: '自由讨论区',
+            body: '欢迎在这里畅所欲言，分享你的想法和观点！',
+            language: 'zh-CN'
+        };
+
+        let gitalk = null;
+
+        function initGitalk(config) {
+            gitalk = new Gitalk(config);
+            gitalk.render('gitalk-container');
+        }
+
+        function loadTopic(topicId, topicName, element) {
+            // 移除所有active类
+            document.querySelectorAll('.topic-card').forEach(card => {
+                card.classList.remove('active');
+            });
+
+            // 添加active类到当前卡片
+            element.classList.add('active');
+
+            // 更新标题
+            document.getElementById('topic-title').innerHTML = `💬 ${topicName}`;
+
+            // 更新Gitalk配置
+            currentTopic = topicId;
+            const topicLabels = {
+                'work': '职场那些事',
+                'life': '生活吐槽',
+                'tech': '科技数码',
+                'car': '汽车话题',
+                'finance': '投资理财',
+                'free': '自由讨论'
+            };
+
+            gitalkConfig.id = topicId + '-discussion';
+            gitalkConfig.labels = ['Gitalk', topicLabels[topicId]];
+            gitalkConfig.title = topicLabels[topicId];
+
+            // 重新初始化Gitalk
+            document.getElementById('gitalk-container').innerHTML = '';
+            initGitalk(gitalkConfig);
+        }
+
+        // 页面加载时初始化默认话题
+        window.addEventListener('DOMContentLoaded', function() {
+            // 检查是否配置了Client ID
+            if (gitalkConfig.clientID === 'YOUR_CLIENT_ID') {
+                document.getElementById('gitalk-container').innerHTML =
+                    '<div style="text-align: center; padding: 40px; color: #666;">' +
+                    '<p style="font-size: 1.2rem; margin-bottom: 10px;">⚠️ 评论系统尚未配置</p>' +
+                    '<p>请按照上方说明完成GitHub OAuth配置后即可使用评论功能</p>' +
+                    '</div>';
+            } else {
+                initGitalk(gitalkConfig);
+            }
+        });
+    </script>
+</body>
+</html>
