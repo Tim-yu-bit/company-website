@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>中国象棋 - 牛马之家</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        .game-container {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+
+        .info {
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: bold;
+        }
+
+        #chessBoard {
+            background: #f0d9a0;
+            border: 4px solid #8b4513;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            cursor: pointer;
+        }
+
+        .controls {
+            margin-top: 20px;
+            font-size: 1.1rem;
+        }
+
+        button {
+            margin: 15px 5px 0;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .status {
+            margin-top: 15px;
+            font-size: 1.2rem;
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>♟️ 中国象棋</h1>
+        <div class="info">
+            <span id="turn">红方回合</span>
+        </div>
+        <canvas id="chessBoard" width="540" height="600"></canvas>
+        <div class="status" id="status"></div>
+        <div class="controls">
+            点击棋子选择，再点击目标位置移动<br>
+            红方 vs 电脑（黑方）
+        </div>
+        <button onclick="resetGame()">重新开始</button>
+        <button class="back-btn" onclick="window.location.href='../games.html'">返回</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('chessBoard');
+        const ctx = canvas.getContext('2d');
+        const turnElement = document.getElementById('turn');
+        const statusElement = document.getElementById('status');
+
+        const GRID_SIZE = 60;
+        const PIECE_RADIUS = 25;
+
+        let selectedPiece = null;
+        let currentPlayer = 'red'; // red or black
+        let gameOver = false;
+
+        // 棋盘初始化
+        const pieces = [
+            // 红方
+            {type: '車', player: 'red', x: 0, y: 9},
+            {type: '馬', player: 'red', x: 1, y: 9},
+            {type: '相', player: 'red', x: 2, y: 9},
+            {type: '仕', player: 'red', x: 3, y: 9},
+            {type: '帥', player: 'red', x: 4, y: 9},
+            {type: '仕', player: 'red', x: 5, y: 9},
+            {type: '相', player: 'red', x: 6, y: 9},
+            {type: '馬', player: 'red', x: 7, y: 9},
+            {type: '車', player: 'red', x: 8, y: 9},
+            {type: '炮', player: 'red', x: 1, y: 7},
+            {type: '炮', player: 'red', x: 7, y: 7},
+            {type: '兵', player: 'red', x: 0, y: 6},
+            {type: '兵', player: 'red', x: 2, y: 6},
+            {type: '兵', player: 'red', x: 4, y: 6},
+            {type: '兵', player: 'red', x: 6, y: 6},
+            {type: '兵', player: 'red', x: 8, y: 6},
+            // 黑方
+            {type: '车', player: 'black', x: 0, y: 0},
+            {type: '马', player: 'black', x: 1, y: 0},
+            {type: '象', player: 'black', x: 2, y: 0},
+            {type: '士', player: 'black', x: 3, y: 0},
+            {type: '将', player: 'black', x: 4, y: 0},
+            {type: '士', player: 'black', x: 5, y: 0},
+            {type: '象', player: 'black', x: 6, y: 0},
+            {type: '马', player: 'black', x: 7, y: 0},
+            {type: '车', player: 'black', x: 8, y: 0},
+            {type: '炮', player: 'black', x: 1, y: 2},
+            {type: '炮', player: 'black', x: 7, y: 2},
+            {type: '卒', player: 'black', x: 0, y: 3},
+            {type: '卒', player: 'black', x: 2, y: 3},
+            {type: '卒', player: 'black', x: 4, y: 3},
+            {type: '卒', player: 'black', x: 6, y: 3},
+            {type: '卒', player: 'black', x: 8, y: 3}
+        ];
+
+        function drawBoard() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 画棋盘线
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+
+            // 横线
+            for (let i = 0; i < 10; i++) {
+                ctx.beginPath();
+                ctx.moveTo(GRID_SIZE, GRID_SIZE + i * GRID_SIZE);
+                ctx.lineTo(GRID_SIZE * 9, GRID_SIZE + i * GRID_SIZE);
+                ctx.stroke();
+            }
+
+            // 竖线
+            for (let i = 0; i < 9; i++) {
+                ctx.beginPath();
+                ctx.moveTo(GRID_SIZE + i * GRID_SIZE, GRID_SIZE);
+                ctx.lineTo(GRID_SIZE + i * GRID_SIZE, GRID_SIZE * 5);
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(GRID_SIZE + i * GRID_SIZE, GRID_SIZE * 6);
+                ctx.lineTo(GRID_SIZE + i * GRID_SIZE, GRID_SIZE * 10);
+                ctx.stroke();
+            }
+
+            // 画九宫格斜线
+            // 上方九宫
+            ctx.beginPath();
+            ctx.moveTo(GRID_SIZE * 4, GRID_SIZE);
+            ctx.lineTo(GRID_SIZE * 6, GRID_SIZE * 3);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(GRID_SIZE * 6, GRID_SIZE);
+            ctx.lineTo(GRID_SIZE * 4, GRID_SIZE * 3);
+            ctx.stroke();
+
+            // 下方九宫
+            ctx.beginPath();
+            ctx.moveTo(GRID_SIZE * 4, GRID_SIZE * 8);
+            ctx.lineTo(GRID_SIZE * 6, GRID_SIZE * 10);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(GRID_SIZE * 6, GRID_SIZE * 8);
+            ctx.lineTo(GRID_SIZE * 4, GRID_SIZE * 10);
+            ctx.stroke();
+
+            // 楚河汉界
+            ctx.font = 'bold 24px Arial';
+            ctx.fillStyle = '#000';
+            ctx.fillText('楚河', GRID_SIZE * 2, GRID_SIZE * 5.5);
+            ctx.fillText('汉界', GRID_SIZE * 6.5, GRID_SIZE * 5.5);
+        }
+
+        function drawPieces() {
+            pieces.forEach(piece => {
+                const x = GRID_SIZE + piece.x * GRID_SIZE;
+                const y = GRID_SIZE + piece.y * GRID_SIZE;
+
+                // 画圆
+                ctx.beginPath();
+                ctx.arc(x, y, PIECE_RADIUS, 0, Math.PI * 2);
+                ctx.fillStyle = piece.player === 'red' ? '#ff6b6b' : '#4a4a4a';
+                ctx.fill();
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                // 选中高亮
+                if (selectedPiece === piece) {
+                    ctx.strokeStyle = '#ffeb3b';
+                    ctx.lineWidth = 4;
+                    ctx.stroke();
+                }
+
+                // 画字
+                ctx.font = 'bold 28px SimSun';
+                ctx.fillStyle = piece.player === 'red' ? '#fff' : '#fff';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(piece.type, x, y);
+            });
+        }
+
+        function getPieceAt(x, y) {
+            return pieces.find(p => p.x === x && p.y === y);
+        }
+
+        function isValidMove(piece, toX, toY) {
+            // 简化的移动规则
+            const target = getPieceAt(toX, toY);
+            if (target && target.player === piece.player) return false;
+
+            const dx = Math.abs(toX - piece.x);
+            const dy = Math.abs(toY - piece.y);
+
+            // 基本范围检查
+            if (toX < 0 || toX > 8 || toY < 0 || toY > 9) return false;
+
+            // 简化的规则判断
+            if (piece.type === '車' || piece.type === '车') {
+                if (piece.x !== toX && piece.y !== toY) return false;
+                // 检查路径是否有棋子
+                const xStep = toX > piece.x ? 1 : toX < piece.x ? -1 : 0;
+                const yStep = toY > piece.y ? 1 : toY < piece.y ? -1 : 0;
+                let checkX = piece.x + xStep;
+                let checkY = piece.y + yStep;
+                while (checkX !== toX || checkY !== toY) {
+                    if (getPieceAt(checkX, checkY)) return false;
+                    checkX += xStep;
+                    checkY += yStep;
+                }
+                return true;
+            }
+
+            if (piece.type === '馬' || piece.type === '马') {
+                return (dx === 2 && dy === 1) || (dx === 1 && dy === 2);
+            }
+
+            if (piece.type === '兵') {
+                if (piece.y > 4) return toY === piece.y - 1 && toX === piece.x;
+                return (toY === piece.y - 1 && toX === piece.x) ||
+                       (toY === piece.y && Math.abs(toX - piece.x) === 1);
+            }
+
+            if (piece.type === '卒') {
+                if (piece.y < 5) return toY === piece.y + 1 && toX === piece.x;
+                return (toY === piece.y + 1 && toX === piece.x) ||
+                       (toY === piece.y && Math.abs(toX - piece.x) === 1);
+            }
+
+            // 其他棋子简化为可以移动相邻格
+            return dx + dy <= 2;
+        }
+
+        function movePiece(piece, toX, toY) {
+            const target = getPieceAt(toX, toY);
+            if (target) {
+                const index = pieces.indexOf(target);
+                pieces.splice(index, 1);
+
+                // 检查是否吃掉将/帅
+                if (target.type === '将' || target.type === '帥') {
+                    gameOver = true;
+                    statusElement.textContent = `${piece.player === 'red' ? '红方' : '黑方'}获胜！`;
+                }
+            }
+            piece.x = toX;
+            piece.y = toY;
+        }
+
+        function aiMove() {
+            if (gameOver) return;
+
+            const blackPieces = pieces.filter(p => p.player === 'black');
+            let moved = false;
+
+            // 简单AI：随机选择一个可以移动的棋子
+            for (let i = 0; i < 30 && !moved; i++) {
+                const piece = blackPieces[Math.floor(Math.random() * blackPieces.length)];
+                const moves = [];
+
+                for (let x = 0; x < 9; x++) {
+                    for (let y = 0; y < 10; y++) {
+                        if (isValidMove(piece, x, y)) {
+                            moves.push({x, y});
+                        }
+                    }
+                }
+
+                if (moves.length > 0) {
+                    const move = moves[Math.floor(Math.random() * moves.length)];
+                    movePiece(piece, move.x, move.y);
+                    moved = true;
+                }
+            }
+
+            currentPlayer = 'red';
+            turnElement.textContent = '红方回合';
+            draw();
+        }
+
+        canvas.addEventListener('click', (e) => {
+            if (gameOver || currentPlayer !== 'red') return;
+
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            const gridX = Math.round((clickX - GRID_SIZE) / GRID_SIZE);
+            const gridY = Math.round((clickY - GRID_SIZE) / GRID_SIZE);
+
+            if (gridX < 0 || gridX > 8 || gridY < 0 || gridY > 9) return;
+
+            const clickedPiece = getPieceAt(gridX, gridY);
+
+            if (selectedPiece) {
+                if (isValidMove(selectedPiece, gridX, gridY)) {
+                    movePiece(selectedPiece, gridX, gridY);
+                    selectedPiece = null;
+                    currentPlayer = 'black';
+                    turnElement.textContent = '黑方回合';
+                    draw();
+
+                    if (!gameOver) {
+                        setTimeout(aiMove, 500);
+                    }
+                } else {
+                    selectedPiece = clickedPiece && clickedPiece.player === 'red' ? clickedPiece : null;
+                    draw();
+                }
+            } else {
+                if (clickedPiece && clickedPiece.player === 'red') {
+                    selectedPiece = clickedPiece;
+                    draw();
+                }
+            }
+        });
+
+        function draw() {
+            drawBoard();
+            drawPieces();
+        }
+
+        function resetGame() {
+            window.location.reload();
+        }
+
+        draw();
+    </script>
+</body>
+</html>

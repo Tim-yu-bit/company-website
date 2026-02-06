@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>军棋对战 - 牛马之家</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        .game-container {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            max-width: 700px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2.5rem;
+        }
+
+        .info {
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+        }
+
+        #gameBoard {
+            background: #8B4513;
+            border: 4px solid #654321;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin: 0 auto;
+        }
+
+        .controls {
+            margin-top: 20px;
+            font-size: 1rem;
+            line-height: 1.8;
+        }
+
+        button {
+            margin: 15px 5px 0;
+            padding: 12px 30px;
+            font-size: 1.1rem;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .back-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+
+        .legend {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            text-align: left;
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .legend-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎖️ 军棋对战</h1>
+        <div class="info">
+            <div id="turn">蓝方回合</div>
+            <div id="status"></div>
+        </div>
+        <canvas id="gameBoard" width="600" height="500"></canvas>
+        <div class="legend">
+            <div class="legend-title">棋子说明：</div>
+            司令>军长>师长>旅长>团长>营长>连长>排长>工兵<br>
+            炸弹可与任何棋子同归于尽<br>
+            工兵可以排除地雷<br>
+            地雷可炸除工兵外的所有棋子
+        </div>
+        <div class="controls">
+            蓝方（玩家） vs 红方（电脑）<br>
+            点击己方棋子选择，再点击目标位置移动或攻击
+        </div>
+        <button onclick="resetGame()">重新开始</button>
+        <button class="back-btn" onclick="window.location.href='../games.html'">返回</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameBoard');
+        const ctx = canvas.getContext('2d');
+        const turnElement = document.getElementById('turn');
+        const statusElement = document.getElementById('status');
+
+        const CELL_SIZE = 50;
+        const ROWS = 10;
+        const COLS = 12;
+
+        let selectedPiece = null;
+        let currentPlayer = 'blue';
+        let gameOver = false;
+
+        // 棋子等级
+        const ranks = {
+            '司': 9, '军': 8, '师': 7, '旅': 6, '团': 5,
+            '营': 4, '连': 3, '排': 2, '工': 1, '雷': 0, '弹': -1, '旗': -2
+        };
+
+        // 初始化棋子
+        function initPieces() {
+            const bluePieces = [
+                {type: '司', player: 'blue', x: 1, y: 0, visible: true},
+                {type: '军', player: 'blue', x: 2, y: 0, visible: true},
+                {type: '师', player: 'blue', x: 3, y: 0, visible: true},
+                {type: '旅', player: 'blue', x: 4, y: 0, visible: true},
+                {type: '团', player: 'blue', x: 5, y: 0, visible: true},
+                {type: '团', player: 'blue', x: 6, y: 0, visible: true},
+                {type: '营', player: 'blue', x: 7, y: 0, visible: true},
+                {type: '营', player: 'blue', x: 8, y: 0, visible: true},
+                {type: '连', player: 'blue', x: 9, y: 0, visible: true},
+                {type: '连', player: 'blue', x: 10, y: 0, visible: true},
+                {type: '排', player: 'blue', x: 1, y: 1, visible: true},
+                {type: '排', player: 'blue', x: 2, y: 1, visible: true},
+                {type: '工', player: 'blue', x: 3, y: 1, visible: true},
+                {type: '弹', player: 'blue', x: 4, y: 1, visible: true},
+                {type: '弹', player: 'blue', x: 5, y: 1, visible: true},
+                {type: '雷', player: 'blue', x: 2, y: 2, visible: true},
+                {type: '雷', player: 'blue', x: 3, y: 2, visible: true},
+                {type: '雷', player: 'blue', x: 4, y: 2, visible: true},
+                {type: '旗', player: 'blue', x: 1, y: 2, visible: true}
+            ];
+
+            const redPieces = [
+                {type: '司', player: 'red', x: 1, y: 9, visible: false},
+                {type: '军', player: 'red', x: 2, y: 9, visible: false},
+                {type: '师', player: 'red', x: 3, y: 9, visible: false},
+                {type: '旅', player: 'red', x: 4, y: 9, visible: false},
+                {type: '团', player: 'red', x: 5, y: 9, visible: false},
+                {type: '团', player: 'red', x: 6, y: 9, visible: false},
+                {type: '营', player: 'red', x: 7, y: 9, visible: false},
+                {type: '营', player: 'red', x: 8, y: 9, visible: false},
+                {type: '连', player: 'red', x: 9, y: 9, visible: false},
+                {type: '连', player: 'red', x: 10, y: 9, visible: false},
+                {type: '排', player: 'red', x: 1, y: 8, visible: false},
+                {type: '排', player: 'red', x: 2, y: 8, visible: false},
+                {type: '工', player: 'red', x: 3, y: 8, visible: false},
+                {type: '弹', player: 'red', x: 4, y: 8, visible: false},
+                {type: '弹', player: 'red', x: 5, y: 8, visible: false},
+                {type: '雷', player: 'red', x: 2, y: 7, visible: false},
+                {type: '雷', player: 'red', x: 3, y: 7, visible: false},
+                {type: '雷', player: 'red', x: 4, y: 7, visible: false},
+                {type: '旗', player: 'red', x: 1, y: 7, visible: false}
+            ];
+
+            return [...bluePieces, ...redPieces];
+        }
+
+        let pieces = initPieces();
+
+        function drawBoard() {
+            ctx.fillStyle = '#DEB887';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 画格子
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    ctx.strokeRect(x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+                }
+            }
+
+            // 画铁路线（粗线）
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = '#666';
+            // 横向铁路
+            for (let y = 1; y < ROWS - 1; y++) {
+                ctx.beginPath();
+                ctx.moveTo(CELL_SIZE, y * CELL_SIZE);
+                ctx.lineTo((COLS - 1) * CELL_SIZE, y * CELL_SIZE);
+                ctx.stroke();
+            }
+        }
+
+        function drawPieces() {
+            pieces.forEach(piece => {
+                const x = piece.x * CELL_SIZE;
+                const y = piece.y * CELL_SIZE;
+
+                // 画棋子底色
+                ctx.fillStyle = piece.player === 'blue' ? '#4169E1' : '#DC143C';
+                ctx.fillRect(x + 5, y + 5, CELL_SIZE - 10, CELL_SIZE - 10);
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(x + 5, y + 5, CELL_SIZE - 10, CELL_SIZE - 10);
+
+                // 选中高亮
+                if (selectedPiece === piece) {
+                    ctx.strokeStyle = '#FFD700';
+                    ctx.lineWidth = 4;
+                    ctx.strokeRect(x + 3, y + 3, CELL_SIZE - 6, CELL_SIZE - 6);
+                }
+
+                // 画文字
+                ctx.font = 'bold 20px SimSun';
+                ctx.fillStyle = '#FFF';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                if (piece.visible) {
+                    ctx.fillText(piece.type, x + CELL_SIZE / 2, y + CELL_SIZE / 2);
+                } else {
+                    ctx.fillText('?', x + CELL_SIZE / 2, y + CELL_SIZE / 2);
+                }
+            });
+        }
+
+        function getPieceAt(x, y) {
+            return pieces.find(p => p.x === x && p.y === y);
+        }
+
+        function canMoveTo(piece, toX, toY) {
+            if (toX < 0 || toX >= COLS || toY < 0 || toY >= ROWS) return false;
+            if (piece.type === '旗' || piece.type === '雷') return false;
+
+            const target = getPieceAt(toX, toY);
+            if (target && target.player === piece.player) return false;
+
+            // 简化移动规则：只能移动到相邻格
+            const dx = Math.abs(toX - piece.x);
+            const dy = Math.abs(toY - piece.y);
+            return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+        }
+
+        function battle(attacker, defender) {
+            attacker.visible = true;
+            defender.visible = true;
+
+            const aRank = ranks[attacker.type];
+            const dRank = ranks[defender.type];
+
+            // 旗子被吃，游戏结束
+            if (defender.type === '旗') {
+                gameOver = true;
+                statusElement.textContent = `${attacker.player === 'blue' ? '蓝方' : '红方'}获胜！`;
+                removePiece(defender);
+                return true;
+            }
+
+            // 炸弹：同归于尽
+            if (attacker.type === '弹' || defender.type === '弹') {
+                removePiece(attacker);
+                removePiece(defender);
+                return false;
+            }
+
+            // 地雷
+            if (defender.type === '雷') {
+                if (attacker.type === '工') {
+                    removePiece(defender);
+                    return true;
+                } else {
+                    removePiece(attacker);
+                    return false;
+                }
+            }
+
+            // 正常战斗
+            if (aRank > dRank) {
+                removePiece(defender);
+                return true;
+            } else if (aRank < dRank) {
+                removePiece(attacker);
+                return false;
+            } else {
+                removePiece(attacker);
+                removePiece(defender);
+                return false;
+            }
+        }
+
+        function removePiece(piece) {
+            const index = pieces.indexOf(piece);
+            if (index > -1) pieces.splice(index, 1);
+        }
+
+        function aiMove() {
+            if (gameOver) return;
+
+            const redPieces = pieces.filter(p => p.player === 'red' && p.type !== '旗' && p.type !== '雷');
+
+            for (let i = 0; i < 20; i++) {
+                if (redPieces.length === 0) break;
+
+                const piece = redPieces[Math.floor(Math.random() * redPieces.length)];
+                const moves = [
+                    {x: piece.x + 1, y: piece.y},
+                    {x: piece.x - 1, y: piece.y},
+                    {x: piece.x, y: piece.y + 1},
+                    {x: piece.x, y: piece.y - 1}
+                ];
+
+                for (const move of moves) {
+                    if (canMoveTo(piece, move.x, move.y)) {
+                        const target = getPieceAt(move.x, move.y);
+                        if (target) {
+                            battle(piece, target);
+                        } else {
+                            piece.x = move.x;
+                            piece.y = move.y;
+                        }
+                        currentPlayer = 'blue';
+                        turnElement.textContent = '蓝方回合';
+                        draw();
+                        return;
+                    }
+                }
+            }
+
+            currentPlayer = 'blue';
+            turnElement.textContent = '蓝方回合';
+            draw();
+        }
+
+        canvas.addEventListener('click', (e) => {
+            if (gameOver || currentPlayer !== 'blue') return;
+
+            const rect = canvas.getBoundingClientRect();
+            const clickX = Math.floor((e.clientX - rect.left) / CELL_SIZE);
+            const clickY = Math.floor((e.clientY - rect.top) / CELL_SIZE);
+
+            const clickedPiece = getPieceAt(clickX, clickY);
+
+            if (selectedPiece) {
+                if (canMoveTo(selectedPiece, clickX, clickY)) {
+                    const target = getPieceAt(clickX, clickY);
+                    if (target) {
+                        const won = battle(selectedPiece, target);
+                        if (won && !gameOver) {
+                            selectedPiece.x = clickX;
+                            selectedPiece.y = clickY;
+                        }
+                    } else {
+                        selectedPiece.x = clickX;
+                        selectedPiece.y = clickY;
+                    }
+
+                    selectedPiece = null;
+                    currentPlayer = 'red';
+                    turnElement.textContent = '红方回合';
+                    draw();
+
+                    if (!gameOver) {
+                        setTimeout(aiMove, 800);
+                    }
+                } else {
+                    selectedPiece = clickedPiece && clickedPiece.player === 'blue' ? clickedPiece : null;
+                    draw();
+                }
+            } else {
+                if (clickedPiece && clickedPiece.player === 'blue') {
+                    selectedPiece = clickedPiece;
+                    draw();
+                }
+            }
+        });
+
+        function draw() {
+            drawBoard();
+            drawPieces();
+        }
+
+        function resetGame() {
+            window.location.reload();
+        }
+
+        draw();
+    </script>
+</body>
+</html>
