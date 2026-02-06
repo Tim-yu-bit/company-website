@@ -94,9 +94,9 @@
         <div class="power-info" id="powerInfo">🔫 单发射击</div>
         <canvas id="gameCanvas" width="400" height="600"></canvas>
         <div class="controls">
-            ← → 移动 | 空格键射击<br>
+            ← → ↑ ↓ 移动 | 空格键射击<br>
             或移动鼠标控制飞机<br>
-            💎 收集道具提升火力！
+            💎 收集道具提升火力！⚡ 射速提升！
         </div>
         <button onclick="resetGame()">重新开始</button>
         <button class="back-btn" onclick="window.location.href='../games.html'">返回</button>
@@ -117,8 +117,10 @@
             height: 40,
             speed: 6,
             dx: 0,
+            dy: 0, // 添加垂直移动
             fireLevel: 1, // 火力等级：1-单发，2-双发，3-三发
-            shield: 0 // 护盾
+            shield: 0, // 护盾
+            rapidFire: 0 // 射速加成时间（秒）
         };
 
         // 游戏状态
@@ -149,6 +151,17 @@
                 ctx.beginPath();
                 ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width, 0, Math.PI * 2);
                 ctx.stroke();
+            }
+
+            // 射速加成效果
+            if (player.rapidFire > 0) {
+                ctx.strokeStyle = `rgba(255, 200, 0, ${Math.min(player.rapidFire / 5, 1)})`;
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 3; i++) {
+                    ctx.beginPath();
+                    ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width + i * 5, 0, Math.PI * 2);
+                    ctx.stroke();
+                }
             }
 
             ctx.fillStyle = '#00ff00';
@@ -236,14 +249,18 @@
                 this.speed = 2;
                 // 随机道具类型
                 const rand = Math.random();
-                if (rand < 0.4) {
+                if (rand < 0.3) {
                     this.type = 'fireUp'; // 火力提升
                     this.color = '#ff0000';
                     this.symbol = '🔥';
-                } else if (rand < 0.7) {
+                } else if (rand < 0.5) {
                     this.type = 'shield'; // 护盾
                     this.color = '#00ffff';
                     this.symbol = '🛡️';
+                } else if (rand < 0.7) {
+                    this.type = 'rapidFire'; // 射速提升
+                    this.color = '#ffa500';
+                    this.symbol = '⚡';
                 } else {
                     this.type = 'life'; // 生命
                     this.color = '#00ff00';
@@ -300,7 +317,10 @@
         // 射击（根据火力等级）
         function shoot() {
             const now = Date.now();
-            if (now - lastShot > shootDelay) {
+            // 射速加成：减少50%冷却时间
+            const currentDelay = player.rapidFire > 0 ? shootDelay * 0.5 : shootDelay;
+
+            if (now - lastShot > currentDelay) {
                 const centerX = player.x + player.width / 2 - 2;
 
                 if (player.fireLevel === 1) {
@@ -349,6 +369,7 @@
             else if (player.fireLevel === 2) text = '🔫🔫 双发射击';
             else text = '🔫🔫🔫 三发射击';
 
+            if (player.rapidFire > 0) text += ' | ⚡ 射速x2';
             if (player.shield > 0) text += ' | 🛡️ 护盾';
 
             powerInfoElement.textContent = text;
@@ -365,9 +386,16 @@
         // 移动玩家
         function movePlayer() {
             player.x += player.dx;
+            player.y += player.dy;
+
+            // 边界检测
             if (player.x < 0) player.x = 0;
             if (player.x + player.width > canvas.width) {
                 player.x = canvas.width - player.width;
+            }
+            if (player.y < 0) player.y = 0;
+            if (player.y + player.height > canvas.height) {
+                player.y = canvas.height - player.height;
             }
         }
 
@@ -424,6 +452,15 @@
                 player.shield -= 0.5;
             }
 
+            // 射速加成衰减
+            if (player.rapidFire > 0) {
+                player.rapidFire -= 1/60; // 每帧减少1/60秒
+                if (player.rapidFire <= 0) {
+                    player.rapidFire = 0;
+                    updatePowerInfo();
+                }
+            }
+
             // 更新和绘制道具
             powerUps = powerUps.filter(powerUp => {
                 powerUp.update();
@@ -435,6 +472,8 @@
                         player.fireLevel = Math.min(3, player.fireLevel + 1);
                     } else if (powerUp.type === 'shield') {
                         player.shield = 100;
+                    } else if (powerUp.type === 'rapidFire') {
+                        player.rapidFire = 10; // 持续10秒
                     } else if (powerUp.type === 'life') {
                         lives = Math.min(5, lives + 1);
                         livesElement.textContent = lives;
@@ -520,8 +559,10 @@
             player.x = canvas.width / 2 - 20;
             player.y = canvas.height - 80;
             player.dx = 0;
+            player.dy = 0;
             player.fireLevel = 1;
             player.shield = 0;
+            player.rapidFire = 0;
             score = 0;
             lives = 3;
             bullets = [];
@@ -557,6 +598,10 @@
             if (keys['ArrowLeft']) player.dx = -player.speed;
             else if (keys['ArrowRight']) player.dx = player.speed;
             else player.dx = 0;
+
+            if (keys['ArrowUp']) player.dy = -player.speed;
+            else if (keys['ArrowDown']) player.dy = player.speed;
+            else player.dy = 0;
         }, 1000 / 60);
 
         // 鼠标控制
