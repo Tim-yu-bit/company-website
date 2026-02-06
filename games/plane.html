@@ -48,9 +48,16 @@
             font-weight: bold;
         }
 
+        .power-info {
+            margin-top: 10px;
+            font-size: 1rem;
+            color: #ffd700;
+        }
+
         .controls {
             margin-top: 20px;
             font-size: 1.1rem;
+            line-height: 1.6;
         }
 
         button {
@@ -79,15 +86,17 @@
 </head>
 <body>
     <div class="game-container">
-        <h1>✈️ 打飞机</h1>
+        <h1>✈️ 打飞机 增强版</h1>
         <div class="info">
             <div>得分: <span id="score">0</span></div>
             <div>生命: <span id="lives">3</span></div>
         </div>
+        <div class="power-info" id="powerInfo">🔫 单发射击</div>
         <canvas id="gameCanvas" width="400" height="600"></canvas>
         <div class="controls">
             ← → 移动 | 空格键射击<br>
-            或移动鼠标控制飞机
+            或移动鼠标控制飞机<br>
+            💎 收集道具提升火力！
         </div>
         <button onclick="resetGame()">重新开始</button>
         <button class="back-btn" onclick="window.location.href='../games.html'">返回</button>
@@ -98,6 +107,7 @@
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
         const livesElement = document.getElementById('lives');
+        const powerInfoElement = document.getElementById('powerInfo');
 
         // 玩家飞机
         const player = {
@@ -105,8 +115,10 @@
             y: canvas.height - 80,
             width: 40,
             height: 40,
-            speed: 5,
-            dx: 0
+            speed: 6,
+            dx: 0,
+            fireLevel: 1, // 火力等级：1-单发，2-双发，3-三发
+            shield: 0 // 护盾
         };
 
         // 游戏状态
@@ -115,16 +127,30 @@
         let gameRunning = true;
         let bullets = [];
         let enemies = [];
+        let powerUps = [];
         let explosions = [];
         let lastShot = 0;
-        let shootDelay = 200;
+        let shootDelay = 120; // 更快的射击频率
 
         // 敌机生成
         let lastEnemy = 0;
         let enemyDelay = 1000;
 
+        // 道具生成
+        let lastPowerUp = 0;
+        let powerUpDelay = 8000;
+
         // 绘制玩家飞机
         function drawPlayer() {
+            // 护盾效果
+            if (player.shield > 0) {
+                ctx.strokeStyle = `rgba(0, 255, 255, ${player.shield / 100})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(player.x + player.width / 2, player.y + player.height / 2, player.width, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
             ctx.fillStyle = '#00ff00';
             // 机身
             ctx.beginPath();
@@ -140,21 +166,31 @@
             ctx.beginPath();
             ctx.arc(player.x + player.width / 2, player.y + player.height / 3, 8, 0, Math.PI * 2);
             ctx.fill();
+
+            // 火力等级指示
+            if (player.fireLevel > 1) {
+                ctx.fillStyle = '#ffff00';
+                ctx.font = '12px Arial';
+                ctx.fillText(`Lv${player.fireLevel}`, player.x + player.width / 2 - 10, player.y - 5);
+            }
         }
 
         // 子弹类
         class Bullet {
-            constructor(x, y) {
-                this.x = x;
+            constructor(x, y, offsetX = 0) {
+                this.x = x + offsetX;
                 this.y = y;
                 this.width = 4;
                 this.height = 15;
-                this.speed = 8;
+                this.speed = 10;
             }
 
             draw() {
                 ctx.fillStyle = '#ffff00';
                 ctx.fillRect(this.x, this.y, this.width, this.height);
+                // 子弹尾迹
+                ctx.fillStyle = 'rgba(255, 255, 0, 0.3)';
+                ctx.fillRect(this.x, this.y + this.height, this.width, 10);
             }
 
             update() {
@@ -170,6 +206,7 @@
                 this.x = Math.random() * (canvas.width - this.width);
                 this.y = -this.height;
                 this.speed = 2 + Math.random() * 2;
+                this.hp = 1;
             }
 
             draw() {
@@ -182,6 +219,53 @@
                 ctx.lineTo(this.x + this.width, this.y);
                 ctx.closePath();
                 ctx.fill();
+            }
+
+            update() {
+                this.y += this.speed;
+            }
+        }
+
+        // 道具类
+        class PowerUp {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.width = 25;
+                this.height = 25;
+                this.speed = 2;
+                // 随机道具类型
+                const rand = Math.random();
+                if (rand < 0.4) {
+                    this.type = 'fireUp'; // 火力提升
+                    this.color = '#ff0000';
+                    this.symbol = '🔥';
+                } else if (rand < 0.7) {
+                    this.type = 'shield'; // 护盾
+                    this.color = '#00ffff';
+                    this.symbol = '🛡️';
+                } else {
+                    this.type = 'life'; // 生命
+                    this.color = '#00ff00';
+                    this.symbol = '❤️';
+                }
+            }
+
+            draw() {
+                // 发光效果
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = this.color;
+
+                // 道具外框
+                ctx.strokeStyle = this.color;
+                ctx.lineWidth = 2;
+                ctx.strokeRect(this.x, this.y, this.width, this.height);
+
+                // 道具符号
+                ctx.font = '20px Arial';
+                ctx.fillText(this.symbol, this.x + 3, this.y + 20);
+
+                ctx.shadowBlur = 0;
             }
 
             update() {
@@ -213,11 +297,26 @@
             }
         }
 
-        // 射击
+        // 射击（根据火力等级）
         function shoot() {
             const now = Date.now();
             if (now - lastShot > shootDelay) {
-                bullets.push(new Bullet(player.x + player.width / 2 - 2, player.y));
+                const centerX = player.x + player.width / 2 - 2;
+
+                if (player.fireLevel === 1) {
+                    // 单发
+                    bullets.push(new Bullet(centerX, player.y));
+                } else if (player.fireLevel === 2) {
+                    // 双发
+                    bullets.push(new Bullet(centerX, player.y, -10));
+                    bullets.push(new Bullet(centerX, player.y, 10));
+                } else if (player.fireLevel >= 3) {
+                    // 三发
+                    bullets.push(new Bullet(centerX, player.y, -15));
+                    bullets.push(new Bullet(centerX, player.y, 0));
+                    bullets.push(new Bullet(centerX, player.y, 15));
+                }
+
                 lastShot = now;
             }
         }
@@ -229,8 +328,30 @@
                 enemies.push(new Enemy());
                 lastEnemy = now;
                 // 随着分数增加，敌机生成更快
-                enemyDelay = Math.max(500, 1000 - score / 10);
+                enemyDelay = Math.max(400, 1000 - score / 10);
             }
+        }
+
+        // 生成道具
+        function spawnPowerUp() {
+            const now = Date.now();
+            if (now - lastPowerUp > powerUpDelay) {
+                const x = Math.random() * (canvas.width - 25);
+                powerUps.push(new PowerUp(x, -25));
+                lastPowerUp = now;
+            }
+        }
+
+        // 更新火力显示
+        function updatePowerInfo() {
+            let text = '';
+            if (player.fireLevel === 1) text = '🔫 单发射击';
+            else if (player.fireLevel === 2) text = '🔫🔫 双发射击';
+            else text = '🔫🔫🔫 三发射击';
+
+            if (player.shield > 0) text += ' | 🛡️ 护盾';
+
+            powerInfoElement.textContent = text;
         }
 
         // 碰撞检测
@@ -295,6 +416,36 @@
             // 生成敌机
             spawnEnemy();
 
+            // 生成道具
+            spawnPowerUp();
+
+            // 护盾衰减
+            if (player.shield > 0) {
+                player.shield -= 0.5;
+            }
+
+            // 更新和绘制道具
+            powerUps = powerUps.filter(powerUp => {
+                powerUp.update();
+                powerUp.draw();
+
+                // 检查玩家拾取
+                if (checkCollision(player, powerUp)) {
+                    if (powerUp.type === 'fireUp') {
+                        player.fireLevel = Math.min(3, player.fireLevel + 1);
+                    } else if (powerUp.type === 'shield') {
+                        player.shield = 100;
+                    } else if (powerUp.type === 'life') {
+                        lives = Math.min(5, lives + 1);
+                        livesElement.textContent = lives;
+                    }
+                    updatePowerInfo();
+                    return false;
+                }
+
+                return powerUp.y < canvas.height;
+            });
+
             // 更新和绘制子弹
             bullets = bullets.filter(bullet => {
                 bullet.update();
@@ -321,10 +472,22 @@
                 // 检查玩家碰撞
                 if (checkCollision(player, enemy)) {
                     explosions.push(new Explosion(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2));
-                    lives--;
-                    livesElement.textContent = lives;
-                    if (lives === 0) {
-                        gameOver();
+
+                    if (player.shield > 0) {
+                        // 有护盾，只消耗护盾
+                        player.shield = 0;
+                        updatePowerInfo();
+                    } else {
+                        // 无护盾，扣生命
+                        lives--;
+                        livesElement.textContent = lives;
+                        // 扣生命后火力下降
+                        player.fireLevel = Math.max(1, player.fireLevel - 1);
+                        updatePowerInfo();
+
+                        if (lives === 0) {
+                            gameOver();
+                        }
                     }
                     return false;
                 }
@@ -357,15 +520,20 @@
             player.x = canvas.width / 2 - 20;
             player.y = canvas.height - 80;
             player.dx = 0;
+            player.fireLevel = 1;
+            player.shield = 0;
             score = 0;
             lives = 3;
             bullets = [];
             enemies = [];
+            powerUps = [];
             explosions = [];
             scoreElement.textContent = score;
             livesElement.textContent = lives;
+            updatePowerInfo();
             gameRunning = true;
             lastEnemy = 0;
+            lastPowerUp = 0;
             enemyDelay = 1000;
             gameLoop();
         }
@@ -401,12 +569,13 @@
             shoot();
         });
 
-        // 自动射击
+        // 自动射击（更快频率）
         setInterval(() => {
             if (gameRunning) shoot();
-        }, 300);
+        }, 150);
 
         // 开始游戏
+        updatePowerInfo();
         gameLoop();
     </script>
 </body>
