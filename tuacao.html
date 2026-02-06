@@ -229,21 +229,6 @@
         <div class="comment-section">
             <h3 id="topic-title">💬 自由讨论区</h3>
 
-            <!-- Gitalk配置说明 -->
-            <div class="setup-instructions">
-                <h4>⚙️ 评论系统配置说明</h4>
-                <p>要启用评论功能，需要完成以下配置步骤：</p>
-                <ol>
-                    <li>访问 <a href="https://github.com/settings/applications/new" target="_blank">GitHub OAuth Apps</a> 创建应用</li>
-                    <li>Application name: 填写 <code>牛马之家评论系统</code></li>
-                    <li>Homepage URL: 填写 <code>https://tim-yu-bit.github.io/company-website/</code></li>
-                    <li>Authorization callback URL: 填写 <code>https://tim-yu-bit.github.io/company-website/</code></li>
-                    <li>创建后获得 <code>Client ID</code> 和 <code>Client Secret</code></li>
-                    <li>编辑此页面，在下方JavaScript代码中填入您的配置信息</li>
-                </ol>
-                <p style="margin-top: 10px;"><strong>提示：</strong>配置完成后，用户可以使用GitHub账号登录发表评论。</p>
-            </div>
-
             <div id="gitalk-container"></div>
         </div>
     </div>
@@ -260,14 +245,14 @@
     <script>
         let currentTopic = 'free';
 
-        // Gitalk配置 - 需要替换为您自己的配置
+        // Gitalk配置
         const gitalkConfig = {
-            clientID: 'YOUR_CLIENT_ID', // 替换为您的GitHub OAuth App Client ID
-            clientSecret: 'YOUR_CLIENT_SECRET', // 替换为您的Client Secret
-            repo: 'company-website', // 您的仓库名
-            owner: 'Tim-yu-bit', // 您的GitHub用户名
-            admin: ['Tim-yu-bit'], // 管理员用户名
-            id: 'free-discussion', // 页面唯一标识
+            clientID: 'Ov23liFvAWZyEWMFK1N0',
+            clientSecret: 'e75ec49f376ab27c58b6acc97d03fa45c18c8d79',
+            repo: 'company-website',
+            owner: 'Tim-yu-bit',
+            admin: ['Tim-yu-bit'],
+            id: 'free-discussion',
             distractionFreeMode: false,
             labels: ['Gitalk', '自由讨论'],
             title: '自由讨论区',
@@ -316,16 +301,7 @@
 
         // 页面加载时初始化默认话题
         window.addEventListener('DOMContentLoaded', function() {
-            // 检查是否配置了Client ID
-            if (gitalkConfig.clientID === 'YOUR_CLIENT_ID') {
-                document.getElementById('gitalk-container').innerHTML =
-                    '<div style="text-align: center; padding: 40px; color: #666;">' +
-                    '<p style="font-size: 1.2rem; margin-bottom: 10px;">⚠️ 评论系统尚未配置</p>' +
-                    '<p>请按照上方说明完成GitHub OAuth配置后即可使用评论功能</p>' +
-                    '</div>';
-            } else {
-                initGitalk(gitalkConfig);
-            }
+            initGitalk(gitalkConfig);
         });
     </script>
 </body>
