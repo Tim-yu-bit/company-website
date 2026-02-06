@@ -323,18 +323,19 @@
             if (now - lastShot > currentDelay) {
                 const centerX = player.x + player.width / 2 - 2;
 
+                // 根据火力等级发射对应数量的子弹
                 if (player.fireLevel === 1) {
                     // 单发
                     bullets.push(new Bullet(centerX, player.y));
-                } else if (player.fireLevel === 2) {
-                    // 双发
-                    bullets.push(new Bullet(centerX, player.y, -10));
-                    bullets.push(new Bullet(centerX, player.y, 10));
-                } else if (player.fireLevel >= 3) {
-                    // 三发
-                    bullets.push(new Bullet(centerX, player.y, -15));
-                    bullets.push(new Bullet(centerX, player.y, 0));
-                    bullets.push(new Bullet(centerX, player.y, 15));
+                } else {
+                    // 多发：均匀分布
+                    const spreadAngle = 15; // 每排子弹间隔
+                    const halfCount = Math.floor(player.fireLevel / 2);
+
+                    for (let i = 0; i < player.fireLevel; i++) {
+                        const offset = (i - halfCount) * spreadAngle;
+                        bullets.push(new Bullet(centerX, player.y, offset));
+                    }
                 }
 
                 lastShot = now;
@@ -365,9 +366,15 @@
         // 更新火力显示
         function updatePowerInfo() {
             let text = '';
-            if (player.fireLevel === 1) text = '🔫 单发射击';
-            else if (player.fireLevel === 2) text = '🔫🔫 双发射击';
-            else text = '🔫🔫🔫 三发射击';
+
+            // 显示火力等级和子弹数
+            if (player.fireLevel === 1) {
+                text = '🔫 单发射击';
+            } else if (player.fireLevel <= 5) {
+                text = '🔫'.repeat(player.fireLevel) + ` ${player.fireLevel}发射击`;
+            } else {
+                text = `🔫x${player.fireLevel} 射击`;
+            }
 
             if (player.rapidFire > 0) text += ' | ⚡ 射速x2';
             if (player.shield > 0) text += ' | 🛡️ 护盾';
@@ -469,7 +476,7 @@
                 // 检查玩家拾取
                 if (checkCollision(player, powerUp)) {
                     if (powerUp.type === 'fireUp') {
-                        player.fireLevel = Math.min(3, player.fireLevel + 1);
+                        player.fireLevel += 1; // 移除上限，无限提升
                     } else if (powerUp.type === 'shield') {
                         player.shield = 100;
                     } else if (powerUp.type === 'rapidFire') {
