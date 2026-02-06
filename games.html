@@ -195,7 +195,7 @@
 
         <div class="games-grid">
             <!-- 魂斗罗 -->
-            <div class="game-card" onclick="openGame('https://www.yikm.net/nes/1.html')">
+            <div class="game-card" onclick="window.open('https://www.yikm.net/nes/1.html', '_blank')">
                 <div class="game-thumbnail">🎯</div>
                 <div class="game-info">
                     <h3>魂斗罗</h3>
@@ -205,7 +205,7 @@
             </div>
 
             <!-- 超级马里奥 -->
-            <div class="game-card" onclick="openGame('https://www.yikm.net/nes/3.html')">
+            <div class="game-card" onclick="window.open('https://www.yikm.net/nes/3.html', '_blank')">
                 <div class="game-thumbnail">🍄</div>
                 <div class="game-info">
                     <h3>超级马里奥</h3>
@@ -215,7 +215,7 @@
             </div>
 
             <!-- 坦克大战 -->
-            <div class="game-card" onclick="openGame('https://www.yikm.net/nes/11.html')">
+            <div class="game-card" onclick="window.open('https://www.yikm.net/nes/11.html', '_blank')">
                 <div class="game-thumbnail">🎖️</div>
                 <div class="game-info">
                     <h3>坦克大战</h3>
@@ -225,7 +225,7 @@
             </div>
 
             <!-- 冒险岛 -->
-            <div class="game-card" onclick="openGame('https://www.yikm.net/nes/23.html')">
+            <div class="game-card" onclick="window.open('https://www.yikm.net/nes/23.html', '_blank')">
                 <div class="game-thumbnail">🏝️</div>
                 <div class="game-info">
                     <h3>冒险岛</h3>
@@ -235,7 +235,7 @@
             </div>
 
             <!-- 赤色要塞 -->
-            <div class="game-card" onclick="openGame('https://www.yikm.net/nes/15.html')">
+            <div class="game-card" onclick="window.open('https://www.yikm.net/nes/15.html', '_blank')">
                 <div class="game-thumbnail">🚁</div>
                 <div class="game-info">
                     <h3>赤色要塞</h3>
@@ -245,7 +245,7 @@
             </div>
 
             <!-- 俄罗斯方块 -->
-            <div class="game-card" onclick="openGame('https://www.yikm.net/nes/5.html')">
+            <div class="game-card" onclick="window.open('https://www.yikm.net/nes/5.html', '_blank')">
                 <div class="game-thumbnail">🧱</div>
                 <div class="game-info">
                     <h3>俄罗斯方块</h3>
@@ -255,7 +255,7 @@
             </div>
 
             <!-- 忍者龙剑传 -->
-            <div class="game-card" onclick="openGame('https://www.yikm.net/nes/43.html')">
+            <div class="game-card" onclick="window.open('https://www.yikm.net/nes/43.html', '_blank')">
                 <div class="game-thumbnail">⚔️</div>
                 <div class="game-info">
                     <h3>忍者龙剑传</h3>
@@ -265,7 +265,7 @@
             </div>
 
             <!-- 双截龙 -->
-            <div class="game-card" onclick="openGame('https://www.yikm.net/nes/53.html')">
+            <div class="game-card" onclick="window.open('https://www.yikm.net/nes/53.html', '_blank')">
                 <div class="game-thumbnail">🥋</div>
                 <div class="game-info">
                     <h3>双截龙</h3>
@@ -275,7 +275,7 @@
             </div>
 
             <!-- 松鼠大作战 -->
-            <div class="game-card" onclick="openGame('https://www.yikm.net/nes/91.html')">
+            <div class="game-card" onclick="window.open('https://www.yikm.net/nes/91.html', '_blank')">
                 <div class="game-thumbnail">🐿️</div>
                 <div class="game-info">
                     <h3>松鼠大作战</h3>
@@ -283,14 +283,6 @@
                     <button class="game-link">点击即玩</button>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- 游戏模态框 -->
-    <div id="gameModal" class="game-modal">
-        <div class="game-frame">
-            <button class="close-game" onclick="closeGame()">✕ 关闭游戏</button>
-            <iframe id="gameIframe" src="" allowfullscreen></iframe>
         </div>
     </div>
 
@@ -302,38 +294,5 @@
     </footer>
 
     <script src="js/script.js"></script>
-    <script>
-        // 打开游戏
-        function openGame(url) {
-            const modal = document.getElementById('gameModal');
-            const iframe = document.getElementById('gameIframe');
-            iframe.src = url;
-            modal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        // 关闭游戏
-        function closeGame() {
-            const modal = document.getElementById('gameModal');
-            const iframe = document.getElementById('gameIframe');
-            iframe.src = '';
-            modal.classList.remove('active');
-            document.body.style.overflow = 'auto';
-        }
-
-        // 点击模态框背景关闭
-        document.getElementById('gameModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeGame();
-            }
-        });
-
-        // ESC键关闭游戏
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeGame();
-            }
-        });
-    </script>
 </body>
 </html>
