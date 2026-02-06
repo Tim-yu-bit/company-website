@@ -184,8 +184,17 @@ body {
     transition: transform 0.3s;
 }
 
+.stat-item.stat-link {
+    cursor: pointer;
+}
+
 .stat-item:hover {
     transform: translateY(-5px);
+}
+
+.stat-item.stat-link:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 
 .stat-item h3 {
@@ -196,6 +205,7 @@ body {
 
 .stat-item p {
     color: #666;
+    font-weight: 500;
 }
 
 /* 服务项目 */
